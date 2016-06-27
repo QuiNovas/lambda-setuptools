@@ -2,6 +2,7 @@
 ####A Command extension to setuptools that builds an AWS Lambda compatible zip file
 
 Use is simple:
+
 1. Add this **setup_requires=['lambda_setuptools']** as an attribute to your _setup.py_ file
 2. Call **python setup.py _ldist_**
     * This will build (using bdist_wheel) and install your package, along with all of the dependencies in _install_requires_
