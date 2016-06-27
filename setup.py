@@ -34,7 +34,7 @@ setup(
 
     keywords='setuptools extension',
 
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'wheel'],
 
     package_dir={'': 'src'},
     packages=find_packages('src'),

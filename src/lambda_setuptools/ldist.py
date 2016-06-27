@@ -25,7 +25,7 @@ class LDist(Command):
         # This is a short-cut to working with the actual build
         # directory, or to using the 'install' command, which
         # will generally only install a zipped egg
-        self.run_command('sdist')
+        self.run_command('bdist_wheel')
 
         # Install the package built by sdist
         # (or bdist, or bdist_wheel, depending on how the user called setup.py
@@ -47,7 +47,7 @@ class LDist(Command):
                 for filename in files:
                     absname = os.path.abspath(os.path.join(root, filename))
                     arcname = absname[len(abs_src) + 1:]
-                    log.debug('zipping {} as {}'.format((os.path.join(root, filename), arcname)))
+                    log.debug('zipping {} as {}'.format(os.path.join(root, filename), arcname))
                     zf.write(absname, arcname)
 
     def _install_dist_package(self):
@@ -66,9 +66,11 @@ class LDist(Command):
                 pass
             else:
                 raise DistutilsInternalError('{} already exists and is not a directory'.format(self._lambda_build_dir))
-        log.info('installing package {} into {}'.format(package_name, self._lambda_build_dir))
+        log.info('installing package {} from {} into {}'.format(package_name,
+                                                                self.get_finalized_command('sdist').dist_dir,
+                                                                self._lambda_build_dir))
         pip = Popen(['pip', 'install',
-                     '-f ', self.get_finalized_command('sdist').dist_dir,
+                     '-f', self.get_finalized_command('sdist').dist_dir,
                      '-t', self._lambda_build_dir, package_name],
                     stdout=PIPE, stderr=PIPE)
         stdout, stderr = pip.communicate()
