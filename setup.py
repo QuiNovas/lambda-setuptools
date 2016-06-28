@@ -12,7 +12,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as readme:
 setup(
     name='lambda-setuptools',
 
-    version='0.1.1',
+    version='0.1.2',
 
     description='A Command extension to setuptools that allows building an AWS Lamba dist',
     long_description=long_description,

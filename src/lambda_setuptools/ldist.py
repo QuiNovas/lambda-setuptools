@@ -26,7 +26,7 @@ class LDist(Command):
         # directory, or to using the 'install' command, which
         # will generally only install a zipped egg
         self.run_command('bdist_wheel')
-        self._dist_dir = self.get_finalized_command('bdist_wheel').dist_dir
+        setattr(self, '_dist_dir', self.get_finalized_command('bdist_wheel').dist_dir)
 
         # Install the package built by bdist_wheel
         # (or bdist, or bdist_wheel, depending on how the user called setup.py
@@ -49,6 +49,9 @@ class LDist(Command):
                     arcname = absname[len(abs_src) + 1:]
                     log.debug('zipping {} as {}'.format(os.path.join(root, filename), arcname))
                     zf.write(absname, arcname)
+        # Set the resulting distribution file path for downstream command use
+        setattr(self, 'dist_name', dist_name)
+        setattr(self, 'dist_path', dist_path)
 
     def _install_dist_package(self):
         # Get the name of the package that we just built
