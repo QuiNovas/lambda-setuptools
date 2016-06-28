@@ -1,4 +1,4 @@
-# setuptools-lambda-dist-extension
+# lambda-setuptools
 ####A Command extension to setuptools that builds an AWS Lambda compatible zip file
 
 Use is simple:
