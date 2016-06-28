@@ -26,8 +26,9 @@ class LDist(Command):
         # directory, or to using the 'install' command, which
         # will generally only install a zipped egg
         self.run_command('bdist_wheel')
+        self._dist_dir = self.get_finalized_command('bdist_wheel').dist_dir
 
-        # Install the package built by sdist
+        # Install the package built by bdist_wheel
         # (or bdist, or bdist_wheel, depending on how the user called setup.py
         self._install_dist_package()
 
@@ -36,8 +37,7 @@ class LDist(Command):
 
     def _build_lambda_package(self):
         dist_name = '{}-lambda-{}.zip'.format(self.distribution.get_name(), self.distribution.get_version())
-        dist_dir = self.get_finalized_command('sdist').dist_dir
-        dist_path = os.path.join(dist_dir, dist_name)
+        dist_path = os.path.join(self._dist_dir, dist_name)
         if os.path.exists(dist_path):
             os.remove(dist_path)
         log.info('creating {}'.format(dist_path))
@@ -53,7 +53,7 @@ class LDist(Command):
     def _install_dist_package(self):
         # Get the name of the package that we just built
         package_name = self.distribution.get_name()
-        # Get the dist directory that sdist put the package in
+        # Get the dist directory that bdist_wheel put the package in
         # Create the lambda build dir
         self._lambda_build_dir = os.path.join('build', 'ldist-'+package_name)
         try:
@@ -67,10 +67,10 @@ class LDist(Command):
             else:
                 raise DistutilsInternalError('{} already exists and is not a directory'.format(self._lambda_build_dir))
         log.info('installing package {} from {} into {}'.format(package_name,
-                                                                self.get_finalized_command('sdist').dist_dir,
+                                                                self._dist_dir,
                                                                 self._lambda_build_dir))
         pip = Popen(['pip', 'install',
-                     '-f', self.get_finalized_command('sdist').dist_dir,
+                     '-f', self._dist_dir,
                      '-t', self._lambda_build_dir, package_name],
                     stdout=PIPE, stderr=PIPE)
         stdout, stderr = pip.communicate()
