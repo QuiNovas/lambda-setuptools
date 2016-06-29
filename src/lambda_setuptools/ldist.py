@@ -1,12 +1,34 @@
 import errno
 import os
+import re
 import shutil
+import string
 import zipfile
 
 from distutils import log
-from distutils.errors import DistutilsPlatformError, DistutilsInternalError
+from distutils.errors import DistutilsPlatformError, DistutilsInternalError, DistutilsSetupError
 from setuptools import Command
 from subprocess import Popen, PIPE
+
+
+def validate_lambda_function(dist, attr, value):
+    if not re.compile('^([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$').match(value):
+        raise DistutilsSetupError('{} must be in the form of \'my_package.some_module:some_function\''.format(attr))
+
+
+def add_lambda_module_to_py_modules(dist, attr, value):
+    py_modules = getattr(dist, 'py_modules', None)
+    if not py_modules:
+        py_modules = []
+    py_modules.append(value)
+    setattr(dist, 'py_modules', py_modules)
+
+
+def validate_lambda_package(dist, attr, value):
+    if not os.path.exists(value) or not os.path.isdir(value):
+        raise DistutilsSetupError('lambda_package either doesn\'t exist or is not a directory')
+    if os.path.exists(os.path.join(value, '__init__.py')):
+        raise DistutilsSetupError('{} {} cannot contain an __init__.py'.format(attr, value))
 
 
 class LDist(Command):
@@ -32,6 +54,10 @@ class LDist(Command):
         # (or bdist, or bdist_wheel, depending on how the user called setup.py
         self._install_dist_package()
 
+        # Use zero (if none specified) or more of the lambda_function, lambda_module or
+        # lambda_package attributes to create the lambda entry point function
+        self._create_lambda_entry_point()
+
         # Now build the lambda package
         self._build_lambda_package()
 
@@ -52,6 +78,42 @@ class LDist(Command):
         # Set the resulting distribution file path for downstream command use
         setattr(self, 'dist_name', dist_name)
         setattr(self, 'dist_path', dist_path)
+
+    def _create_lambda_entry_point(self):
+        self._create_lambda_function()
+        self._copy_lambda_package()
+
+    def _create_lambda_function(self):
+        lambda_function = getattr(self.distribution, 'lambda_function', None)
+        if not lambda_function:
+            return
+        components = string.split(lambda_function, ':')
+        module = components[0]
+        function = components[1]
+        function_lines = [
+            'import {}\n'.format(module),
+            '\n',
+            '\n',
+            'handler = {}.{}\n'.format(module, function)
+        ]
+        package_name = self.distribution.get_name().replace('-', '_').replace('.', '_')
+        function_path = os.path.join(self._lambda_build_dir, '{}_function.py'.format(package_name))
+        log.info('creating {}'.format(function_path))
+        with open(function_path, 'w') as py:
+            py.writelines(function_lines)
+
+    def _copy_lambda_package(self):
+        lambda_package = getattr(self.distribution, 'lambda_package', None)
+        if not lambda_package:
+            return
+        for filename in os.listdir(lambda_package):
+            filepath = os.path.join(lambda_package, filename)
+            if os.path.isdir(filepath):
+                log.debug('{} is a directory, skipping lambda copy'.format(filepath))
+                continue
+            log.info('copying {} to {}'.format(filepath, self._lambda_build_dir))
+            shutil.copy(filepath, self._lambda_build_dir)
+
 
     def _install_dist_package(self):
         # Get the name of the package that we just built

@@ -12,7 +12,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as readme:
 setup(
     name='lambda-setuptools',
 
-    version='0.1.2',
+    version='0.1.3',
 
     description='A Command extension to setuptools that allows building an AWS Lamba dist',
     long_description=long_description,
@@ -39,5 +39,14 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
 
-    entry_points={"distutils.commands": ['ldist = lambda_setuptools.ldist:LDist']}
+    entry_points={
+        'distutils.commands': [
+            'ldist = lambda_setuptools.ldist:LDist'
+        ],
+        'distutils.setup_keywords': [
+            'lambda_function = lambda_setuptools.ldist:validate_lambda_function',
+            'lambda_module = lambda_setuptools.ldist:add_lambda_module_to_py_modules',
+            'lambda_package = lambda_setuptools.ldist:validate_lambda_package'
+        ]
+    }
 )
