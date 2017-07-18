@@ -62,7 +62,7 @@ class LDist(Command):
         self._build_lambda_package()
 
     def _build_lambda_package(self):
-        dist_name = '{}-lambda-{}.zip'.format(self.distribution.get_name(), self.distribution.get_version())
+        dist_name = '{}-{}.zip'.format(self.distribution.get_name(), self.distribution.get_version())
         dist_path = os.path.join(self._dist_dir, dist_name)
         if os.path.exists(dist_path):
             os.remove(dist_path)

@@ -12,12 +12,12 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as readme:
 setup(
     name='lambda-setuptools',
 
-    version='0.1.3',
+    version='0.1.4',
 
-    description='A Command extension to setuptools that allows building an AWS Lamba dist',
+    description='A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3',
     long_description=long_description,
 
-    url='https://github.com/illumicare/setuptools-lambda-dist-extension',
+    url='https://github.com/QuiNovas/lambda-setuptools',
 
     author='Joseph Wortmann',
     author_email='joseph.wortmann@gmail.com',
@@ -25,7 +25,7 @@ setup(
     license='APL 2.0',
 
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: Apache Software License',
@@ -34,14 +34,15 @@ setup(
 
     keywords='setuptools extension',
 
-    install_requires=['setuptools', 'wheel'],
+    install_requires=['boto3', 'setuptools', 'wheel'],
 
     package_dir={'': 'src'},
     packages=find_packages('src'),
 
     entry_points={
         'distutils.commands': [
-            'ldist = lambda_setuptools.ldist:LDist'
+            'ldist = lambda_setuptools.ldist:LDist',
+            'lupload = lambda_setuptools.lupload:LUpload'
         ],
         'distutils.setup_keywords': [
             'lambda_function = lambda_setuptools.ldist:validate_lambda_function',
