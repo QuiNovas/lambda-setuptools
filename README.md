@@ -10,7 +10,7 @@ This extension adds two new commands to setuptools:
     * Usage: `ldist`
         * Effect: This will build (using _bdist_wheel_) and install your package, along with all of the dependencies in _install_requires_
             * It is _highly_ recommended that you **DO NOT** include _boto3_ or _botocore_ in your _install_requires_ dependencies as these are provided by the AWS Lambda environment. Include them at your own peril! 
-            * The result will be in _dist/[your-package-name]-lambda-[version].zip_ (along with your wheel)
+            * The result will be in _dist/[your-package-name]-[version].zip_ (along with your wheel)
 2. **lupload**
     * Usage: `lupload --access-key=<my_access_key> --secret-access-key=<my_secret> --s3-bucket=<my_S3_bucket> --kms-key-id=<my_KMS_key> --s3-prefix=<my_S3_key_prefix>`
         * Effect: This will build (using _ldist_) and upload the resulting ZIP file to the specified S3 bucket
