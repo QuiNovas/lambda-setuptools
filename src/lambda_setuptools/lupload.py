@@ -29,7 +29,7 @@ class LUpload(Command):
 
     def finalize_options(self):
         """Post-process options."""
-        if getattr(self, 's3_access_key') is None or \
+        if getattr(self, 'access_key') is None or \
                         getattr(self, 'secret_access_key') is None or \
                         getattr(self, 's3_bucket') is None:
             raise DistutilsOptionError('access-key, secret-access-key, s3-bucket are required')
