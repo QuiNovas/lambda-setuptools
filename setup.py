@@ -7,21 +7,17 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-# Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as readme:
-    long_description = readme.read()
-
 # Convert the README.md to README.rst
-with open('README.rst','w') as readme:
+with open('README.rst', 'w') as readme:
     readme.write(pypandoc.convert('README.md', 'rst', format='markdown'))
 
 setup(
     name='lambda-setuptools',
 
-    version='0.1.5',
+    version='0.1.6',
 
     description='A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3',
-    long_description=long_description,
+    long_description=pypandoc.convert('README.md', 'rst', format='markdown'),
 
     url='https://github.com/QuiNovas/lambda-setuptools',
 
