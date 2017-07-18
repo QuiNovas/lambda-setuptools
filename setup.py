@@ -18,7 +18,7 @@ with open('README.rst','w') as readme:
 setup(
     name='lambda-setuptools',
 
-    version='0.1.4',
+    version='0.1.5',
 
     description='A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3',
     long_description=long_description,
