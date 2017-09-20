@@ -54,7 +54,7 @@ class LUpload(Command):
             getattr(self, 's3_bucket'),
             getattr(self, 'kms_key_id')
         ))
-        with open(dist_path) as dist:
+        with open(dist_path, 'rb') as dist:
             if getattr(self, 'kms_key_id'):
                 response = s3.put_object(
                     Body=dist,
