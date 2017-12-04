@@ -2,7 +2,6 @@ import errno
 import os
 import re
 import shutil
-import string
 import zipfile
 
 from distutils import log
@@ -87,7 +86,7 @@ class LDist(Command):
         lambda_function = getattr(self.distribution, 'lambda_function', None)
         if not lambda_function:
             return
-        components = string.split(lambda_function, ':')
+        components = lambda_function.split(':')
         module = components[0]
         function = components[1]
         function_lines = [
