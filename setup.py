@@ -14,7 +14,7 @@ with open('README.rst', 'w') as readme:
 setup(
     name='lambda-setuptools',
 
-    version='0.1.9',
+    version='0.2.0',
 
     description='A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3',
     long_description=pypandoc.convert('README.md', 'rst', format='markdown'),
@@ -46,7 +46,8 @@ setup(
     entry_points={
         'distutils.commands': [
             'ldist = lambda_setuptools.ldist:LDist',
-            'lupload = lambda_setuptools.lupload:LUpload'
+            'lupload = lambda_setuptools.lupload:LUpload',
+            'lupdate = lambda_setuptools.lupdate:LUpdate'
         ],
         'distutils.setup_keywords': [
             'lambda_function = lambda_setuptools.ldist:validate_lambda_function',

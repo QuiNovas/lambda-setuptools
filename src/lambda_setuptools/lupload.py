@@ -38,8 +38,8 @@ class LUpload(Command):
         """Run command."""
         self.run_command('ldist')
         ldist_cmd = self.get_finalized_command('ldist')
-        dist_path = getattr(ldist_cmd, 'dist_path', None)
-        dist_name = getattr(ldist_cmd, 'dist_name', None)
+        dist_path = getattr(ldist_cmd, 'dist_path')
+        dist_name = getattr(ldist_cmd, 'dist_name')
         if dist_path is None or dist_name is None:
             raise DistutilsArgError('\'ldist\' missing attributes')
         dist_name = getattr(self, 's3_prefix') + dist_name
@@ -70,6 +70,8 @@ class LUpload(Command):
                     Key=dist_name,
                     ServerSideEncryption='AES256'
                 )
+        setattr(self, 's3_object_key', dist_name)
+        setattr(self, 's3_object_version', response['VersionId'])
         log.info('upload complete:\n{}'.format(
             json.dumps(response, sort_keys=True, indent=4, separators=(',', ': ')))
         )
