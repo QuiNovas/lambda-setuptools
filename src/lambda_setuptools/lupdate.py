@@ -7,16 +7,21 @@ from distutils import log
 from distutils.errors import DistutilsArgError, DistutilsOptionError
 from setuptools import Command
 
+
 class LUpdate(Command):
-    description = 'update the specified Lambda functions with the result of the lupload command'
+    description = 'Update the specified Lambda functions with the result of the lupload command'
     user_options = [
-        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs')
+        ('access-key=', None, 'The access key to use to upload'),
+        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs'),
+        ('secret-access-key=', None, 'The secret access to use to upload')
     ]
 
     def initialize_options(self):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
+        setattr(self, 'access_key', None)
         setattr(self, 'function_names', None)
+        setattr(self, 'secret_access_key', None)
 
     def finalize_options(self):
         """Post-process options."""
@@ -34,8 +39,8 @@ class LUpdate(Command):
             raise DistutilsArgError('\'lupload\' missing attributes')
         aws_lambda = boto3.client(
             'lambda',
-            aws_access_key_id=getattr(lupload_cmd, 'access_key'),
-            aws_secret_access_key=getattr(lupload_cmd, 'secret_access_key'),
+            aws_access_key_id=getattr(self, 'access_key'),
+            aws_secret_access_key=getattr(self, 'secret_access_key'),
             config=Config(signature_version='s3v4')
         )
         for function_name in getattr(self, 'function_names').split(','):
@@ -45,7 +50,7 @@ class LUpdate(Command):
                     FunctionName=function_name,
                     S3Bucket=s3_bucket,
                     S3Key=s3_key,
-                    S3ObjectVersion=s3,
+                    S3ObjectVersion=s3_object_version,
                     Publish=True
                 )
             except ClientError as err:
