@@ -34,7 +34,7 @@ class LDist(Command):
 
     description = 'build a AWS Lambda compatible distribution'
     user_options = [
-        ('include-version', None, 'Include the version number on the lambda distribution name')
+        ('include-version=', None, 'Include the version number on the lambda distribution name')
     ]
 
     def initialize_options(self):
@@ -45,16 +45,16 @@ class LDist(Command):
     def finalize_options(self):
         inc_ver = getattr(self, 'include_version')
         if inc_ver is None or \
-                inc_ver is '' or \
-                inc_ver is 'True' or \
-                inc_ver is 'true' or \
-                inc_ver is 'Yes' or \
-                inc_ver is 'yes':
+                inc_ver == '' or \
+                inc_ver == 'True' or \
+                inc_ver == 'true' or \
+                inc_ver == 'Yes' or \
+                inc_ver == 'yes':
             setattr(self, 'include_version', True)
-        elif inc_ver is 'False' or \
-                inc_ver is 'false' or \
-                inc_ver is 'No' or \
-                inc_ver is 'no':
+        elif inc_ver == 'False' or \
+                inc_ver == 'false' or \
+                inc_ver == 'No' or \
+                inc_ver == 'no':
             setattr(self, 'include_version', False)
         else:
             raise DistutilsOptionError('include-version must be True, true, Yes, yes, False, false, No, no or absent')
