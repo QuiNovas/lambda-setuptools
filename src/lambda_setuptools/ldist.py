@@ -5,7 +5,7 @@ import shutil
 import zipfile
 
 from distutils import log
-from distutils.errors import DistutilsPlatformError, DistutilsInternalError, DistutilsSetupError
+from distutils.errors import DistutilsPlatformError, DistutilsInternalError, DistutilsSetupError, DistutilsOptionError
 from setuptools import Command
 from subprocess import Popen, PIPE
 
@@ -33,13 +33,31 @@ def validate_lambda_package(dist, attr, value):
 class LDist(Command):
 
     description = 'build a AWS Lambda compatible distribution'
-    user_options = []
+    user_options = [
+        ('include-version', None, 'Include the version number on the lambda distribution name')
+    ]
 
     def initialize_options(self):
-        pass
+        """Set default values for options."""
+        # Each user option must be listed here with their default value.
+        setattr(self, 'include_version', None)
 
     def finalize_options(self):
-        pass
+        inc_ver = getattr(self, 'include_version')
+        if inc_ver is None or \
+                inc_ver is '' or \
+                inc_ver is 'True' or \
+                inc_ver is 'true' or \
+                inc_ver is 'Yes' or \
+                inc_ver is 'yes':
+            setattr(self, 'include_version', True)
+        elif inc_ver is 'False' or \
+                inc_ver is 'false' or \
+                inc_ver is 'No' or \
+                inc_ver is 'no':
+            setattr(self, 'include_version', False)
+        else:
+            raise DistutilsOptionError('include-version must be True, true, Yes, yes, False, false, No, no or absent')
 
     def run(self):
         # We must create a distribution to install first
@@ -61,7 +79,9 @@ class LDist(Command):
         self._build_lambda_package()
 
     def _build_lambda_package(self):
-        dist_name = '{}-{}.zip'.format(self.distribution.get_name(), self.distribution.get_version())
+        dist_name = '{}-{}.zip'.format(self.distribution.get_name(), self.distribution.get_version()) \
+            if getattr(self, 'include_version') \
+            else '{}.zip'.format(self.distribution.get_name())
         dist_path = os.path.join(self._dist_dir, dist_name)
         if os.path.exists(dist_path):
             os.remove(dist_path)
