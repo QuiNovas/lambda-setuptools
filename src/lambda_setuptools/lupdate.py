@@ -11,9 +11,7 @@ from setuptools import Command
 class LUpdate(Command):
     description = 'Update the specified Lambda functions with the result of the lupload command'
     user_options = [
-        ('access-key=', None, 'The access key to use to upload'),
-        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs'),
-        ('secret-access-key=', None, 'The secret access to use to upload')
+        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs')
     ]
 
     def initialize_options(self):
@@ -39,8 +37,8 @@ class LUpdate(Command):
             raise DistutilsArgError('\'lupload\' missing attributes')
         aws_lambda = boto3.client(
             'lambda',
-            aws_access_key_id=getattr(self, 'access_key'),
-            aws_secret_access_key=getattr(self, 'secret_access_key'),
+            aws_access_key_id=getattr(lupload_cmd, 'access_key'),
+            aws_secret_access_key=getattr(lupload_cmd, 'secret_access_key'),
             config=Config(signature_version='s3v4')
         )
         for function_name in getattr(self, 'function_names').split(','):
