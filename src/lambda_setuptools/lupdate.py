@@ -11,15 +11,15 @@ from setuptools import Command
 class LUpdate(Command):
     description = 'Update the specified Lambda functions with the result of the lupload command'
     user_options = [
-        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs')
+        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs'),
+        ('region=', None, 'Region for the named lambda functions. Defaults to "us-east-1"')
     ]
 
     def initialize_options(self):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
-        setattr(self, 'access_key', None)
         setattr(self, 'function_names', None)
-        setattr(self, 'secret_access_key', None)
+        setattr(self, 'region', 'us-east-1')
 
     def finalize_options(self):
         """Post-process options."""
@@ -39,7 +39,8 @@ class LUpdate(Command):
             'lambda',
             aws_access_key_id=getattr(lupload_cmd, 'access_key'),
             aws_secret_access_key=getattr(lupload_cmd, 'secret_access_key'),
-            config=Config(signature_version='s3v4')
+            config=Config(signature_version='s3v4'),
+            region_name=getattr(self, 'region')
         )
         for function_name in getattr(self, 'function_names').split(','):
             try:
