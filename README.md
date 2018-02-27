@@ -18,9 +18,10 @@ This extension adds two new commands to setuptools:
             * _kms-key-id_ is optional. If it is not provided, standard AES256 encryption will be used
             * _s3-prefix_ is optional. If it is not provided, the ZIP file will be uploaded to the root of the S3 bucket
 3. **lupdate**
-    * Usage: `lupdate --function-names=<my_function1>,<my_function2>,<my_function3>`
+    * Usage: `lupdate --function-names=<my_function1>,<my_function2>,<my_function3> --region=<my_aws_region>`
         * Effect: This will update the AWS Lambda function code for the listed functions. Functions may be function names, partial ARNs and/or full ARNs.
             * Requires the use of *lupload* parameters as the S3 object uploaded is used as the function code to update.
+            * _region_ is optional. If it is not provided, then `us-east-1` will be used.
 
 This extension also adds three new attributes to the setup() function:
 
