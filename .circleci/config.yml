@@ -1,0 +1,29 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:2.7
+    steps:
+      - checkout
+      - run: sudo apt-get -y install pandoc
+      - run: sudo pip install pypandoc
+      - run: python setup.py sdist bdist_wheel
+  upload:
+    docker:
+      - image: circleci/python:2.7
+    steps:
+      - run: pip install twine
+      - run: twine upload dist/*
+workflows:
+  version: 2
+  build-and-upload:
+    jobs:
+      - build
+      - upload:
+          context: pypi
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - build

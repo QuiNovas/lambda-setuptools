@@ -7,8 +7,9 @@ Simply add `setup_requires=['lambda_setuptools']` as an attribute to your _setup
 This extension adds two new commands to setuptools:
 
 1. **ldist**
-    * Usage: `ldist`
+    * Usage: `ldist --include-version=<True | true | Yes | yes | False | false | No | no>`
         * Effect: This will build (using _bdist_wheel_) and install your package, along with all of the dependencies in _install_requires_
+            * _include-version_ is optional. If not present it will default to _True_
             * It is _highly_ recommended that you **DO NOT** include _boto3_ or _botocore_ in your _install_requires_ dependencies as these are provided by the AWS Lambda environment. Include them at your own peril! 
             * The result will be in _dist/[your-package-name]-[version].zip_ (along with your wheel)
 2. **lupload**
@@ -16,6 +17,10 @@ This extension adds two new commands to setuptools:
         * Effect: This will build (using _ldist_) and upload the resulting ZIP file to the specified S3 bucket
             * _kms-key-id_ is optional. If it is not provided, standard AES256 encryption will be used
             * _s3-prefix_ is optional. If it is not provided, the ZIP file will be uploaded to the root of the S3 bucket
+3. **lupdate**
+    * Usage: `lupdate --function-names=<my_function1>,<my_function2>,<my_function3>`
+        * Effect: This will update the AWS Lambda function code for the listed functions. Functions may be function names, partial ARNs and/or full ARNs.
+            * Requires the use of *lupload* parameters as the S3 object uploaded is used as the function code to update.
 
 This extension also adds three new attributes to the setup() function:
 
