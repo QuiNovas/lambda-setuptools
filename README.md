@@ -7,8 +7,9 @@ Simply add `setup_requires=['lambda_setuptools']` as an attribute to your _setup
 This extension adds two new commands to setuptools:
 
 1. **ldist**
-    * Usage: `ldist`
+    * Usage: `ldist --include-version=<True | true | Yes | yes | False | false | No | no>`
         * Effect: This will build (using _bdist_wheel_) and install your package, along with all of the dependencies in _install_requires_
+            * _include-version_ is optional. If not present it will default to _True_
             * It is _highly_ recommended that you **DO NOT** include _boto3_ or _botocore_ in your _install_requires_ dependencies as these are provided by the AWS Lambda environment. Include them at your own peril! 
             * The result will be in _dist/[your-package-name]-[version].zip_ (along with your wheel)
 2. **lupload**

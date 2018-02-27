@@ -7,8 +7,9 @@ from distutils import log
 from distutils.errors import DistutilsArgError, DistutilsOptionError
 from setuptools import Command
 
+
 class LUpdate(Command):
-    description = 'update the specified Lambda functions with the result of the lupload command'
+    description = 'Update the specified Lambda functions with the result of the lupload command'
     user_options = [
         ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs')
     ]
@@ -16,7 +17,9 @@ class LUpdate(Command):
     def initialize_options(self):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
+        setattr(self, 'access_key', None)
         setattr(self, 'function_names', None)
+        setattr(self, 'secret_access_key', None)
 
     def finalize_options(self):
         """Post-process options."""
@@ -45,7 +48,7 @@ class LUpdate(Command):
                     FunctionName=function_name,
                     S3Bucket=s3_bucket,
                     S3Key=s3_key,
-                    S3ObjectVersion=s3,
+                    S3ObjectVersion=s3_object_version,
                     Publish=True
                 )
             except ClientError as err:
