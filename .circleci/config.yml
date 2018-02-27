@@ -8,11 +8,17 @@ jobs:
       - run: sudo apt-get -y install pandoc
       - run: sudo pip install pypandoc
       - run: python setup.py sdist bdist_wheel
+      - persist_to_workspace:
+          root: dist
+          paths:
+            - *
   upload:
     docker:
       - image: circleci/python:2.7
     steps:
       - run: sudo pip install twine
+      - attach_workspace:
+          at: dist
       - run: twine upload dist/*
 workflows:
   version: 2
