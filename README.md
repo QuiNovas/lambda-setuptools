@@ -13,10 +13,11 @@ This extension adds two new commands to setuptools:
             * It is _highly_ recommended that you **DO NOT** include _boto3_ or _botocore_ in your _install_requires_ dependencies as these are provided by the AWS Lambda environment. Include them at your own peril! 
             * The result will be in _dist/[your-package-name]-[version].zip_ (along with your wheel)
 2. **lupload**
-    * Usage: `lupload --access-key=<my_access_key> --secret-access-key=<my_secret> --s3-bucket=<my_S3_bucket> --kms-key-id=<my_KMS_key> --s3-prefix=<my_S3_key_prefix>`
+    * Usage: `lupload --access-key=<my_access_key> --secret-access-key=<my_secret> --s3-bucket=<my_S3_bucket> --kms-key-id=<my_KMS_key> --s3-prefix=<my_S3_key_prefix> --endpoint-url=<my_endpoint_url>`
         * Effect: This will build (using _ldist_) and upload the resulting ZIP file to the specified S3 bucket
             * _kms-key-id_ is optional. If it is not provided, standard AES256 encryption will be used
             * _s3-prefix_ is optional. If it is not provided, the ZIP file will be uploaded to the root of the S3 bucket
+            * _endpoint_url_ is optional. If it is not provided, the default endpoint for the accessed account will be used
 3. **lupdate**
     * Usage: `lupdate --function-names=<my_function1>,<my_function2>,<my_function3> --region=<my_aws_region>`
         * Effect: This will update the AWS Lambda function code for the listed functions. Functions may be function names, partial ARNs and/or full ARNs.
