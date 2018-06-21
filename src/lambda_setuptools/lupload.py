@@ -46,7 +46,6 @@ class LUpload(Command):
             raise DistutilsArgError('\'ldist\' missing attributes')
         dist_name = getattr(self, 's3_prefix') + dist_name
         if len(getattr(self, 'endpoint_url')):
-            pass
             s3 = boto3.client(
                 's3',
                 aws_access_key_id=getattr(self, 'access_key'),
