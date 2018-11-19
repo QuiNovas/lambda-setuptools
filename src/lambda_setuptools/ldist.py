@@ -2,6 +2,7 @@ import errno
 import os
 import re
 import shutil
+import sys
 import zipfile
 
 from distutils import log
@@ -153,7 +154,7 @@ class LDist(Command):
         log.info('installing package {} from {} into {}'.format(package_name,
                                                                 self._dist_dir,
                                                                 self._lambda_build_dir))
-        pip = Popen(['pip', 'install',
+        pip = Popen([sys.executable, '-m', 'pip', 'install',
                      '-f', self._dist_dir,
                      '-t', self._lambda_build_dir, package_name],
                     stdout=PIPE, stderr=PIPE)
