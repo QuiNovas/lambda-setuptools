@@ -47,29 +47,31 @@ class LUpdate(Command):
             region_name=getattr(self, 'region')
         )
 
-        for function_name in getattr(self, 'function_names').split(','):
-            try:
-                log.info('Updating and publishing {}'.format(function_name))
-                aws_lambda.update_function_code(
-                    FunctionName=function_name,
-                    S3Bucket=s3_bucket,
-                    S3Key=s3_key,
-                    S3ObjectVersion=s3_object_version,
-                    Publish=True
-                )
-            except ClientError as err:
-                log.warn('Error updating {}\n{}'.format(function_name, err))
+        if getattr(self, 'function_names') is not None:
+            for function_name in getattr(self, 'function_names').split(','):
+                try:
+                    log.info('Updating and publishing {}'.format(function_name))
+                    aws_lambda.update_function_code(
+                        FunctionName=function_name,
+                        S3Bucket=s3_bucket,
+                        S3Key=s3_key,
+                        S3ObjectVersion=s3_object_version,
+                        Publish=True
+                    )
+                except ClientError as err:
+                    log.warn('Error updating {}\n{}'.format(function_name, err))
 
-        for lambda_layer in getattr(self, 'lambda_layers').split(','):
-            try:
-                log.info('Updating and publishing {}'.format(function_name))
-                aws_lambda.publish_layer_version(
-                    LayerName=lambda_layer,
-                    Content={
-                        'S3Bucket': s3_bucket,
-                        'S3Key': s3_key,
-                        'S3ObjectVersion': s3_object_version
-                    }
-                )
-            except ClientError as err:
-                log.warn('Error updating {}\n{}'.format(function_name, err))
+        if getattr(self, 'lambda_layers') is not None:
+            for lambda_layer in getattr(self, 'lambda_layers').split(','):
+                try:
+                    log.info('Updating and publishing {}'.format(function_name))
+                    aws_lambda.publish_layer_version(
+                        LayerName=lambda_layer,
+                        Content={
+                            'S3Bucket': s3_bucket,
+                            'S3Key': s3_key,
+                            'S3ObjectVersion': s3_object_version
+                        }
+                    )
+                except ClientError as err:
+                    log.warn('Error updating {}\n{}'.format(function_name, err))
