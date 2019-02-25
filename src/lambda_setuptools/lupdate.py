@@ -13,7 +13,7 @@ class LUpdate(Command):
         ('function-names=', None,
          'Comma seperated list of function names to update. Must have at least one entry if layer-names is empty. Can be functon name, partial ARNs, and/or full ARNs'),
         ('region=', None, 'Region for the named lambda functions. Defaults to "us-east-1"'),
-        ('lambda-layers=', False,
+        ('lambda-layers=', None,
          'Comma seperated list of lambda layers to update. Must have at least one entry if function-names is empty. Can be functon name, partial ARNs, and/or full ARNs')
     ]
 
