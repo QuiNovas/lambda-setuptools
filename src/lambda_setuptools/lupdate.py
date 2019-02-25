@@ -1,5 +1,4 @@
 import boto3
-import json
 
 from botocore.client import Config
 from botocore.exceptions import ClientError
