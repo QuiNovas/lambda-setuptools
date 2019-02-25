@@ -11,8 +11,11 @@ from setuptools import Command
 class LUpdate(Command):
     description = 'Update the specified Lambda functions with the result of the lupload command'
     user_options = [
-        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs'),
-        ('region=', None, 'Region for the named lambda functions. Defaults to "us-east-1"')
+        ('function-names=', None,
+         'Comma seperated list of function names to update. Must have at least one entry if layer-names is empty. Can be functon name, partial ARNs, and/or full ARNs'),
+        ('region=', None, 'Region for the named lambda functions. Defaults to "us-east-1"'),
+        ('lambda-layers=', False,
+         'Comma seperated list of lambda layers to update. Must have at least one entry if function-names is empty. Can be functon name, partial ARNs, and/or full ARNs')
     ]
 
     def initialize_options(self):
@@ -20,11 +23,12 @@ class LUpdate(Command):
         # Each user option must be listed here with their default value.
         setattr(self, 'function_names', None)
         setattr(self, 'region', 'us-east-1')
+        setattr(self, 'lambda_layers', None)
 
     def finalize_options(self):
         """Post-process options."""
-        if getattr(self, 'function_names') is None:
-            raise DistutilsOptionError('function-names is required')
+        if getattr(self, 'function_names') is None and getattr(self, 'lambda_layers') is None:
+            raise DistutilsOptionError('one item for lambda-layers or function-names is required')
 
     def run(self):
         """Run command."""
@@ -35,6 +39,7 @@ class LUpdate(Command):
         s3_object_version = getattr(lupload_cmd, 's3_object_version')
         if s3_bucket is None or s3_key is None or s3_object_version is None:
             raise DistutilsArgError('\'lupload\' missing attributes')
+
         aws_lambda = boto3.client(
             'lambda',
             aws_access_key_id=getattr(lupload_cmd, 'access_key'),
@@ -42,6 +47,7 @@ class LUpdate(Command):
             config=Config(signature_version='s3v4'),
             region_name=getattr(self, 'region')
         )
+
         for function_name in getattr(self, 'function_names').split(','):
             try:
                 log.info('Updating and publishing {}'.format(function_name))
@@ -51,6 +57,20 @@ class LUpdate(Command):
                     S3Key=s3_key,
                     S3ObjectVersion=s3_object_version,
                     Publish=True
+                )
+            except ClientError as err:
+                log.warn('Error updating {}\n{}'.format(function_name, err))
+
+        for lambda_layer in getattr(self, 'lambda_layers').split(','):
+            try:
+                log.info('Updating and publishing {}'.format(function_name))
+                aws_lambda.publish_layer_version(
+                    LayerName=lambda_layer,
+                    Content={
+                        'S3Bucket': s3_bucket,
+                        'S3Key': s3_key,
+                        'S3ObjectVersion': s3_object_version
+                    }
                 )
             except ClientError as err:
                 log.warn('Error updating {}\n{}'.format(function_name, err))
