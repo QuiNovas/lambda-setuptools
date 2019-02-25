@@ -13,7 +13,7 @@ class LUpdate(Command):
         ('function-names=', None,
          'Comma seperated list of function names to update. Must have at least one entry if layer-names is empty. Can be functon name, partial ARNs, and/or full ARNs'),
         ('region=', None, 'Region for the named lambda functions. Defaults to "us-east-1"'),
-        ('lambda-layers=', None,
+        ('layer-names=', None,
          'Comma seperated list of lambda layers to update. Must have at least one entry if function-names is empty. Can be functon name, partial ARNs, and/or full ARNs')
     ]
 
@@ -22,12 +22,12 @@ class LUpdate(Command):
         # Each user option must be listed here with their default value.
         setattr(self, 'function_names', None)
         setattr(self, 'region', 'us-east-1')
-        setattr(self, 'lambda_layers', None)
+        setattr(self, 'layer_names', None)
 
     def finalize_options(self):
         """Post-process options."""
-        if getattr(self, 'function_names') is None and getattr(self, 'lambda_layers') is None:
-            raise DistutilsOptionError('one item for lambda-layers or function-names is required')
+        if getattr(self, 'function_names') is None and getattr(self, 'layer_names') is None:
+            raise DistutilsOptionError('one item for layer-names or function-names is required')
 
     def run(self):
         """Run command."""
@@ -61,8 +61,8 @@ class LUpdate(Command):
                 except ClientError as err:
                     log.warn('Error updating {}\n{}'.format(function_name, err))
 
-        if getattr(self, 'lambda_layers') is not None:
-            for lambda_layer in getattr(self, 'lambda_layers').split(','):
+        if getattr(self, 'layer_names') is not None:
+            for lambda_layer in getattr(self, 'layer_names').split(','):
                 try:
                     log.info('Updating and publishing {}'.format(function_name))
                     aws_lambda.publish_layer_version(
