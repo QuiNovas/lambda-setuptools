@@ -158,8 +158,11 @@ class LDist(Command):
                      '-t', self._lambda_build_dir, package_name],
                     stdout=PIPE, stderr=PIPE)
         stdout, stderr = pip.communicate()
-        log.debug("pip stdout: {}".format(stdout))
-        log.debug("pip stderr: {}".format(stderr))
 
         if pip.returncode is not 0:
+            log.info("pip stdout: {}".format(stdout))
+            log.error("pip stderr: {}".format(stderr))
             raise DistutilsPlatformError('pip returned unsuccessfully')
+        else:
+            log.debug("pip stdout: {}".format(stdout))
+            log.debug("pip stderr: {}".format(stderr))
