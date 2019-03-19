@@ -90,3 +90,6 @@ ENV/
 .idea/
 lambda-setuptools.iml
 README.rst
+
+# VSCode settings
+.vscode
