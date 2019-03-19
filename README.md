@@ -1,6 +1,6 @@
 # lambda-setuptools
 
-####A Command extension to setuptools that builds an AWS Lambda compatible zip file and uploads it to an S3 bucket
+#### A Command extension to setuptools that builds an AWS Lambda compatible zip file and uploads it to an S3 bucket
 
 Simply add `setup_requires=['lambda_setuptools']` as an attribute to your _setup.py_ file
 
