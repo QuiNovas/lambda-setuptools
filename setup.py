@@ -14,7 +14,7 @@ with open('README.rst', 'w', encoding='utf-8') as readme:
 setup(
     name='lambda-setuptools',
 
-    version='0.2.2',
+    version='0.3.0',
 
     description='A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3',
     long_description=pypandoc.convert('README.md', 'rst', format='markdown'),
