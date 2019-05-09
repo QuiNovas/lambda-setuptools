@@ -1,5 +1,6 @@
 import boto3
 import json
+import os
 
 from botocore.client import Config
 from distutils import log
@@ -22,10 +23,10 @@ class LUpload(Command):
     def initialize_options(self):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
-        setattr(self, 'access_key', None)
+        setattr(self, 'access_key', os.environ.get('AWS_ACCESS_KEY_ID', None))
         setattr(self, 'kms_key_id', None)
         setattr(self, 's3_prefix', '')
-        setattr(self, 'secret_access_key', None)
+        setattr(self, 'secret_access_key', os.environ.get('AWS_SECRET_ACCESS_KEY', None))
         setattr(self, 's3_bucket', None)
         setattr(self, 'endpoint_url', '')
 
