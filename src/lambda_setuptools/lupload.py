@@ -83,7 +83,7 @@ class LUpload(Command):
                     ServerSideEncryption='AES256'
                 )
         setattr(self, 's3_object_key', dist_name)
-        setattr(self, 's3_object_version', response['VersionId'])
+        setattr(self, 's3_object_version', response.get('VersionId'))
         log.info('upload complete:\n{}'.format(
             json.dumps(response, sort_keys=True, indent=4, separators=(',', ': ')))
         )

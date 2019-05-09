@@ -33,7 +33,9 @@ class LUpdate(Command):
         s3_bucket = getattr(lupload_cmd, 's3_bucket')
         s3_key = getattr(lupload_cmd, 's3_object_key')
         s3_object_version = getattr(lupload_cmd, 's3_object_version')
-        if s3_bucket is None or s3_key is None or s3_object_version is None:
+        # s3_object_version could be None if Versioning is not enabled in that
+        # bucket. That will be okay as it is optional to update_function_code.
+        if s3_bucket is None or s3_key is None:
             raise DistutilsArgError('\'lupload\' missing attributes')
         aws_lambda = boto3.client(
             'lambda',
