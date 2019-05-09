@@ -47,12 +47,14 @@ class LUpdate(Command):
         for function_name in getattr(self, 'function_names').split(','):
             try:
                 log.info('Updating and publishing {}'.format(function_name))
-                aws_lambda.update_function_code(
+                kwargs = dict(
                     FunctionName=function_name,
                     S3Bucket=s3_bucket,
                     S3Key=s3_key,
-                    S3ObjectVersion=s3_object_version,
                     Publish=True
                 )
+                if s3_object_version:
+                    kwargs['S3ObjectVersion'] = s3_object_version
+                aws_lambda.update_function_code(**kwargs)
             except ClientError as err:
                 log.warn('Error updating {}\n{}'.format(function_name, err))
