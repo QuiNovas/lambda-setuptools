@@ -11,7 +11,7 @@ from subprocess import Popen, PIPE
 
 
 def validate_lambda_function(dist, attr, value):
-    if not re.compile('^([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$').match(value):
+    if not re.compile(r'^([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$').match(value):
         raise DistutilsSetupError('{} must be in the form of \'my_package.some_module:some_function\''.format(attr))
 
 
