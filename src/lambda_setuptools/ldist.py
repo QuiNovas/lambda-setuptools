@@ -34,30 +34,52 @@ class LDist(Command):
 
     description = 'build a AWS Lambda compatible distribution'
     user_options = [
-        ('include-version=', None, 'Include the version number on the lambda distribution name')
+        ('include-version=', None, 'Include the version number on the lambda distribution name'),
+        ('build-layer=', None, 'Build a layer instead of a function distribution'),
+        ('layer-dir=', None, 'The directory to place the layer into. Defaults to "python" if not provided')
     ]
 
     def initialize_options(self):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
         setattr(self, 'include_version', None)
+        setattr(self, 'build_layer', None)
+        setattr(self, 'layer_dir', None)
 
     def finalize_options(self):
-        inc_ver = getattr(self, 'include_version')
-        if inc_ver is None or \
-                inc_ver == '' or \
-                inc_ver == 'True' or \
-                inc_ver == 'true' or \
-                inc_ver == 'Yes' or \
-                inc_ver == 'yes':
+        include_version = getattr(self, 'include_version')
+        if include_version is None or \
+                include_version == '' or \
+                include_version == 'True' or \
+                include_version == 'true' or \
+                include_version == 'Yes' or \
+                include_version == 'yes':
             setattr(self, 'include_version', True)
-        elif inc_ver == 'False' or \
-                inc_ver == 'false' or \
-                inc_ver == 'No' or \
-                inc_ver == 'no':
+        elif include_version == 'False' or \
+                include_version == 'false' or \
+                include_version == 'No' or \
+                include_version == 'no':
             setattr(self, 'include_version', False)
         else:
             raise DistutilsOptionError('include-version must be True, true, Yes, yes, False, false, No, no or absent')
+        build_layer = getattr(self, 'build_layer')
+        if include_version == 'True' or \
+                build_layer == 'true' or \
+                build_layer == 'Yes' or \
+                build_layer == 'yes':
+            setattr(self, 'build_layer', True)
+        elif build_layer is None or \
+                build_layer == '' or \
+                build_layer == 'False' or \
+                build_layer == 'false' or \
+                build_layer == 'No' or \
+                build_layer == 'no':
+            setattr(self, 'build_layer', False)
+        else:
+            raise DistutilsOptionError('build-layer must be True, true, Yes, yes, False, false, No, no or absent')
+        layer_dir = getattr(self, 'layer_dir')
+        if layer_dir is None:
+          setattr(self, 'layer_dir', 'python')
 
     def run(self):
         # We must create a distribution to install first
@@ -73,7 +95,8 @@ class LDist(Command):
 
         # Use zero (if none specified) or more of the lambda_function, lambda_module or
         # lambda_package attributes to create the lambda entry point function
-        self._create_lambda_entry_point()
+        if not getattr(self, 'build_layer'):
+            self._create_lambda_entry_point()
 
         # Now build the lambda package
         self._build_lambda_package()
@@ -140,11 +163,14 @@ class LDist(Command):
         # Get the dist directory that bdist_wheel put the package in
         # Create the lambda build dir
         self._lambda_build_dir = os.path.join('build', 'ldist-'+package_name)
+        build_dir = self._lambda_build_dir
+        if getattr(self, 'build_layer'):
+            build_dir = os.path.join(build_dir, getattr(self, 'layer_dir'))
         try:
             if os.path.exists(self._lambda_build_dir):
                 shutil.rmtree(self._lambda_build_dir)
             log.info('creating {}'.format(self._lambda_build_dir))
-            os.makedirs(self._lambda_build_dir)
+            os.makedirs(build_dir)
         except OSError as exc:
             if exc.errno == errno.EEXIST and os.path.isdir(self._lambda_build_dir):
                 pass
@@ -152,10 +178,10 @@ class LDist(Command):
                 raise DistutilsInternalError('{} already exists and is not a directory'.format(self._lambda_build_dir))
         log.info('installing package {} from {} into {}'.format(package_name,
                                                                 self._dist_dir,
-                                                                self._lambda_build_dir))
+                                                                build_dir))
         pip = Popen(['pip', 'install',
                      '-f', self._dist_dir,
-                     '-t', self._lambda_build_dir, package_name],
+                     '-t', build_dir, package_name],
                     stdout=PIPE, stderr=PIPE)
         stdout, stderr = pip.communicate()
 

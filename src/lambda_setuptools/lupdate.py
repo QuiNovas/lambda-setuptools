@@ -9,22 +9,28 @@ from setuptools import Command
 
 
 class LUpdate(Command):
-    description = 'Update the specified Lambda functions with the result of the lupload command'
+    description = 'Update the specified Lambda functions or layers with the result of the lupload command'
     user_options = [
-        ('function-names=', None, 'Comma seperated list of function names to update. Must have at least one entry. Can be functon name, partial ARNs, and/or full ARNs'),
-        ('region=', None, 'Region for the named lambda functions. Defaults to "us-east-1"')
+        ('function-names=', None, 'DEPRECATED - use "lambda-names" instead. Comma seperated list of function names to update. Must have at least one entry. Can be function names, partial ARNs, and/or full ARNs'),
+        ('lambda-names=', None, 'Comma seperated list of function or layer names to update. Must have at least one entry. Can be function/layer names, partial ARNs, and/or full ARNs'),
+        ('layer-runtimes=', None, 'Comma seperated list of python runtimes the layer is compatible with. Defaults to "python2.7,python3.6,python3.7"'),
+        ('region=', None, 'Region for the named lambda functions or layers. Defaults to "us-east-1"')
     ]
 
     def initialize_options(self):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
-        setattr(self, 'function_names', None)
+        setattr(self, 'function_names', '')
+        setattr(self, 'lambda_names', '')
+        setattr(self, 'layer_runtimes', 'python2.7,python3.6,python3.7')
         setattr(self, 'region', 'us-east-1')
 
     def finalize_options(self):
         """Post-process options."""
-        if getattr(self, 'function_names') is None:
-            raise DistutilsOptionError('function-names is required')
+        if not getattr(self, 'function_names') and not getattr(self, 'lambda_names'):
+            raise DistutilsOptionError('lambda-names and/or function-names (DEPRECATED) is required')
+        setattr(self, 'lambda_names', getattr(self, 'lambda_names') + ',' + getattr(self, 'function_names'))
+        setattr(self, 'layer_runtimes', getattr(self, 'layer_runtimes').split(','))
 
     def run(self):
         """Run command."""
@@ -42,15 +48,32 @@ class LUpdate(Command):
             config=Config(signature_version='s3v4'),
             region_name=getattr(self, 'region')
         )
-        for function_name in getattr(self, 'function_names').split(','):
-            try:
-                log.info('Updating and publishing {}'.format(function_name))
-                aws_lambda.update_function_code(
-                    FunctionName=function_name,
-                    S3Bucket=s3_bucket,
-                    S3Key=s3_key,
-                    S3ObjectVersion=s3_object_version,
-                    Publish=True
-                )
-            except ClientError as err:
-                log.warn('Error updating {}\n{}'.format(function_name, err))
+        for lambda_name in set(getattr(self, 'lambda_names').split(',')):
+            if not lambda_name:
+                continue
+            if not getattr(lupload_cmd, 'build_layer'):
+                try:
+                    log.info('Updating and publishing function {}'.format(lambda_name))
+                    aws_lambda.update_function_code(
+                        FunctionName=lambda_name,
+                        S3Bucket=s3_bucket,
+                        S3Key=s3_key,
+                        S3ObjectVersion=s3_object_version,
+                        Publish=True
+                    )
+                except ClientError as err:
+                    log.warn('Error updating function {}\n{}'.format(lambda_name, err))
+            else:
+                try:
+                    log.info('Publishing layer {}'.format(lambda_name))
+                    aws_lambda.publish_layer_version(
+                        LayerName=lambda_name,
+                        Content={
+                            'S3Bucket': s3_bucket,
+                            'S3Key': s3_key,
+                            'S3ObjectVersion': s3_object_version
+                        },
+                        CompatibleRuntimes=getattr(self, 'layer_runtimes')
+                    )
+                except ClientError as err:
+                    log.warn('Error publishing layer {}\n{}'.format(lambda_name, err))

@@ -40,6 +40,8 @@ class LUpload(Command):
         """Run command."""
         self.run_command('ldist')
         ldist_cmd = self.get_finalized_command('ldist')
+        # For downstream use
+        setattr(self, 'build_layer', getattr(ldist_cmd, 'build_layer'))
         dist_path = getattr(ldist_cmd, 'dist_path')
         dist_name = getattr(ldist_cmd, 'dist_name')
         if dist_path is None or dist_name is None:
