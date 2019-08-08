@@ -63,7 +63,7 @@ class LDist(Command):
         else:
             raise DistutilsOptionError('include-version must be True, true, Yes, yes, False, false, No, no or absent')
         build_layer = getattr(self, 'build_layer')
-        if include_version == 'True' or \
+        if build_layer == 'True' or \
                 build_layer == 'true' or \
                 build_layer == 'Yes' or \
                 build_layer == 'yes':

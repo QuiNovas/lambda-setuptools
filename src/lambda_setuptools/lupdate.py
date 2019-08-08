@@ -68,6 +68,7 @@ class LUpdate(Command):
                     log.info('Publishing layer {}'.format(lambda_name))
                     aws_lambda.publish_layer_version(
                         LayerName=lambda_name,
+                        Description='{}-{}'.format(self.distribution.get_name(), self.distribution.get_version()),
                         Content={
                             'S3Bucket': s3_bucket,
                             'S3Key': s3_key,
