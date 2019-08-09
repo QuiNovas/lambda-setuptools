@@ -17,6 +17,7 @@ This extension adds two new commands to setuptools:
 2. **lupload**
     * Usage: `lupload --access-key=<my_access_key> --secret-access-key=<my_secret> --s3-bucket=<my_S3_bucket> --kms-key-id=<my_KMS_key> --s3-prefix=<my_S3_key_prefix> --endpoint-url=<my_endpoint_url>`
         * Effect: This will build (using _ldist_) and upload the resulting ZIP file to the specified S3 bucket
+            * _access-key_ ans _secret-access-key_ are optional (and DEPRECATED). The new method of setting these is by using the boto3 standard (https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html). This allows for several methods of granting AWS access, including through the use of roles and assumed roles. If provided, these are set to **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCESS_KEY** environment variables (respectively) in the local `os.environ`.
             * _kms-key-id_ is optional. If it is not provided, standard AES256 encryption will be used
             * _s3-prefix_ is optional. If it is not provided, the ZIP file will be uploaded to the root of the S3 bucket
             * _endpoint_url_ is optional. If it is not provided, the default endpoint for the accessed account will be used
@@ -26,7 +27,7 @@ This extension adds two new commands to setuptools:
             * _function-names_ is *DEPRECATED*. Use _lambda-names_ instead. Joined as a _set_ with _lambda-names_.
             * _lambda-names_ contains the names of functions XOR layers, depending on the update type. Update type is sourced from _ldist_ through _lupload_.
             * _layer-runtimes_ is optional, and can be one or more of _python2.7_|_python3.6_|_python3.7_, seperated by commas. Defaults to all three.
-            * Requires the use of *lupload* parameters as the S3 object uploaded is used as the function code to update.
+            * Requires the use of *lupload* as the S3 object uploaded is used as the function/layer code to update.
             * _region_ is optional. If it is not provided, then `us-east-1` will be used.
 
 This extension also adds three new attributes to the setup() function:
