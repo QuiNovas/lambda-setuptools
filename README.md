@@ -7,7 +7,7 @@ Simply add `setup_requires=['lambda_setuptools']` as an attribute to your _setup
 This extension adds two new commands to setuptools:
 
 1. **ldist**
-    * Usage: `ldist --include-version=<True | true | Yes | yes | False | false | No | no> --build-layer=<True | true | Yes | yes | False | false | No | no> layer-dir=<my_layer_dir>`
+    * Usage: `ldist --include-version=<True | true | Yes | yes | False | false | No | no> --build-layer=<True | true | Yes | yes | False | false | No | no> --layer-dir=<my_layer_dir>`
         * Effect: This will build (using _bdist_wheel_) and install your package, along with all of the dependencies in _install_requires_
             * _include-version_ is optional. If not present it will default to _True_
             * _build-layer_ is optional. If not present it will default to _False_. Set to _True_ to build a layer instead of a function
