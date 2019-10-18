@@ -20,7 +20,7 @@ class LUpdate(Command):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
         setattr(self, 'function_names', None)
-        setattr(self, 'region', os.environ.get('AWS_DEFAULT_REGION', 'us-east-1'))
+        setattr(self, 'region', os.environ.get('AWS_REGION', os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')))
 
     def finalize_options(self):
         """Post-process options."""
