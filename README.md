@@ -7,21 +7,27 @@ Simply add `setup_requires=['lambda_setuptools']` as an attribute to your _setup
 This extension adds two new commands to setuptools:
 
 1. **ldist**
-    * Usage: `ldist --include-version=<True | true | Yes | yes | False | false | No | no>`
+    * Usage: `ldist --include-version=<True | true | Yes | yes | False | false | No | no> --build-layer=<True | true | Yes | yes | False | false | No | no> --layer-dir=<my_layer_dir>`
         * Effect: This will build (using _bdist_wheel_) and install your package, along with all of the dependencies in _install_requires_
             * _include-version_ is optional. If not present it will default to _True_
+            * _build-layer_ is optional. If not present it will default to _False_. Set to _True_ to build a layer instead of a function
+            * _layer-dir_ is optional. Defaults to _python_. Only used if _build-layer_ is _True_
             * It is _highly_ recommended that you **DO NOT** include _boto3_ or _botocore_ in your _install_requires_ dependencies as these are provided by the AWS Lambda environment. Include them at your own peril! 
             * The result will be in _dist/[your-package-name]-[version].zip_ (along with your wheel)
 2. **lupload**
     * Usage: `lupload --access-key=<my_access_key> --secret-access-key=<my_secret> --s3-bucket=<my_S3_bucket> --kms-key-id=<my_KMS_key> --s3-prefix=<my_S3_key_prefix> --endpoint-url=<my_endpoint_url>`
         * Effect: This will build (using _ldist_) and upload the resulting ZIP file to the specified S3 bucket
+            * _access-key_ ans _secret-access-key_ are optional (and DEPRECATED). The new method of setting these is by using the boto3 standard (https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html). This allows for several methods of granting AWS access, including through the use of roles and assumed roles. If provided, these are set to **AWS_ACCESS_KEY_ID** and **AWS_SECRET_ACCESS_KEY** environment variables (respectively) in the local `os.environ`.
             * _kms-key-id_ is optional. If it is not provided, standard AES256 encryption will be used
             * _s3-prefix_ is optional. If it is not provided, the ZIP file will be uploaded to the root of the S3 bucket
             * _endpoint_url_ is optional. If it is not provided, the default endpoint for the accessed account will be used
 3. **lupdate**
-    * Usage: `lupdate --function-names=<my_function1>,<my_function2>,<my_function3> --region=<my_aws_region>`
-        * Effect: This will update the AWS Lambda function code for the listed functions. Functions may be function names, partial ARNs and/or full ARNs.
-            * Requires the use of *lupload* parameters as the S3 object uploaded is used as the function code to update.
+    * Usage: `lupdate --function-names=<my_function1>,<my_function2>,<my_function3> --lambda-names=<my_name1>,<my_name2>,<my_name3> --layer-runtimes=python2.7,python3.6,python3.7 --region=<my_aws_region>`
+        * Effect: This will update the AWS Lambda function or layer code for the listed functions/layers. Functions/layers may be function names, partial ARNs (in the case of a function name) and/or full ARNs.
+            * _function-names_ is *DEPRECATED*. Use _lambda-names_ instead. Joined as a _set_ with _lambda-names_.
+            * _lambda-names_ contains the names of functions XOR layers, depending on the update type. Update type is sourced from _ldist_ through _lupload_.
+            * _layer-runtimes_ is optional, and can be one or more of _python2.7_|_python3.6_|_python3.7_, seperated by commas. Defaults to all three.
+            * Requires the use of *lupload* as the S3 object uploaded is used as the function/layer code to update.
             * _region_ is optional. If it is not provided, then `us-east-1` will be used.
 
 This extension also adds three new attributes to the setup() function:
