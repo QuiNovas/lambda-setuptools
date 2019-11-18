@@ -1,5 +1,6 @@
 import boto3
 import json
+import os
 
 from botocore.client import Config
 from botocore.exceptions import ClientError
@@ -24,7 +25,7 @@ class LUpdate(Command):
         setattr(self, 'function_names', '')
         setattr(self, 'lambda_names', '')
         setattr(self, 'layer_runtimes', 'python2.7,python3.6,python3.7')
-        setattr(self, 'region', environ.get('AWS_DEFAULT_REGION', 'us-east-1'))
+        setattr(self, 'region', environ.get('AWS_REGION', environ.get('AWS_DEFAULT_REGION', 'us-east-1')))
 
     def finalize_options(self):
         """Post-process options."""
