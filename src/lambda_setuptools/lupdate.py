@@ -1,5 +1,6 @@
 import boto3
 import json
+import os
 
 from botocore.client import Config
 from botocore.exceptions import ClientError
@@ -24,7 +25,7 @@ class LUpdate(Command):
         setattr(self, 'function_names', '')
         setattr(self, 'lambda_names', '')
         setattr(self, 'layer_runtimes', 'python2.7,python3.6,python3.7')
-        setattr(self, 'region', environ.get('AWS_DEFAULT_REGION', 'us-east-1'))
+        setattr(self, 'region', environ.get('AWS_REGION', environ.get('AWS_DEFAULT_REGION', 'us-east-1')))
 
     def finalize_options(self):
         """Post-process options."""
@@ -41,7 +42,9 @@ class LUpdate(Command):
         s3_bucket = getattr(lupload_cmd, 's3_bucket')
         s3_key = getattr(lupload_cmd, 's3_object_key')
         s3_object_version = getattr(lupload_cmd, 's3_object_version')
-        if s3_bucket is None or s3_key is None or s3_object_version is None:
+        # s3_object_version could be None if Versioning is not enabled in that
+        # bucket. That will be okay as it is optional to update_function_code.
+        if s3_bucket is None or s3_key is None:
             raise DistutilsArgError('\'lupload\' missing attributes')
         aws_lambda = boto3.client(
             'lambda',
@@ -54,26 +57,27 @@ class LUpdate(Command):
             if not getattr(ldist_cmd, 'build_layer', False):
                 try:
                     log.info('Updating and publishing function {}'.format(lambda_name))
-                    aws_lambda.update_function_code(
+                    kwargs = dict(
                         FunctionName=lambda_name,
                         S3Bucket=s3_bucket,
                         S3Key=s3_key,
-                        S3ObjectVersion=s3_object_version,
                         Publish=True
                     )
+                    if s3_object_version:
+                        kwargs['S3ObjectVersion'] = s3_object_version
+                    aws_lambda.update_function_code(**kwargs)
                 except ClientError as err:
                     log.warn('Error updating function {}\n{}'.format(lambda_name, err))
             else:
                 try:
                     log.info('Publishing layer {}'.format(lambda_name))
+                    content = dict(S3Bucket = s3_bucket, S3Key = s3_key)
+                    if s3_object_version:
+                        content['S3ObjectVersion'] = s3_object_version
                     aws_lambda.publish_layer_version(
                         LayerName=lambda_name,
                         Description='{}-{}'.format(self.distribution.get_name(), self.distribution.get_version()),
-                        Content={
-                            'S3Bucket': s3_bucket,
-                            'S3Key': s3_key,
-                            'S3ObjectVersion': s3_object_version
-                        },
+                        Content=content,
                         CompatibleRuntimes=getattr(self, 'layer_runtimes')
                     )
                 except ClientError as err:
