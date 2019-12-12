@@ -1,5 +1,3 @@
-import pypandoc
-
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
@@ -7,9 +5,9 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-# Convert the README.md to README.rst
-with open('README.rst', 'w', encoding='utf-8') as readme:
-    readme.write(pypandoc.convert('README.md', 'rst', format='markdown'))
+def get_long_description():
+    with open(path.join(path.dirname(path.abspath(__file__)), 'README.md'), encoding='utf8') as fp:
+        return fp.read()
 
 setup(
     name='lambda-setuptools',
@@ -17,7 +15,8 @@ setup(
     version='0.4.3',
 
     description='A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3',
-    long_description=pypandoc.convert('README.md', 'rst', format='markdown'),
+    long_description=get_long_description(),
+    long_description_content_type='text/markdown',
 
     url='https://github.com/QuiNovas/lambda-setuptools',
 
@@ -41,7 +40,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
 
-    setup_requires=['pypandoc'],
+    setup_requires=[],
 
     entry_points={
         'distutils.commands': [
