@@ -3,16 +3,19 @@ import os
 import re
 import shutil
 import zipfile
-
 from distutils import log
-from distutils.errors import DistutilsPlatformError, DistutilsInternalError, DistutilsSetupError, DistutilsOptionError
+from distutils.errors import (DistutilsInternalError, DistutilsOptionError,
+                              DistutilsSetupError)
+
+from lambda_pkg_resources import (LAMBDA_EXCLUDES, DistInstaller,
+                                  ExcludesWorkingSet)
+from pkg_resources import WorkingSet, parse_requirements
 from setuptools import Command
-from subprocess import Popen, PIPE
 
 
 def validate_lambda_function(dist, attr, value):
     if not re.compile(r'^([a-zA-Z0-9_]+\.)*[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$').match(value):
-        raise DistutilsSetupError('{} must be in the form of \'my_package.some_module:some_function\''.format(attr))
+        raise DistutilsSetupError(f'{attr} must be in the form of \'my_package.some_module:some_function\'')
 
 
 def add_lambda_module_to_py_modules(dist, attr, value):
@@ -27,13 +30,14 @@ def validate_lambda_package(dist, attr, value):
     if not os.path.exists(value) or not os.path.isdir(value):
         raise DistutilsSetupError('lambda_package either doesn\'t exist or is not a directory')
     if os.path.exists(os.path.join(value, '__init__.py')):
-        raise DistutilsSetupError('{} {} cannot contain an __init__.py'.format(attr, value))
+        raise DistutilsSetupError(f'{attr} {value} cannot contain an __init__.py')
 
 
 class LDist(Command):
 
     description = 'build a AWS Lambda compatible distribution'
     user_options = [
+        ('exclude-lambda-packages=', None, 'Excludes the packages that are provided by the AWS Lambda execution environment'),
         ('include-version=', None, 'Include the version number on the lambda distribution name'),
         ('build-layer=', None, 'Build a layer instead of a function distribution'),
         ('layer-dir=', None, 'The directory to place the layer into. Defaults to "python" if not provided')
@@ -42,11 +46,27 @@ class LDist(Command):
     def initialize_options(self):
         """Set default values for options."""
         # Each user option must be listed here with their default value.
+        setattr(self, 'exclude_lambda_packages', None)
         setattr(self, 'include_version', None)
         setattr(self, 'build_layer', None)
         setattr(self, 'layer_dir', None)
 
     def finalize_options(self):
+        exclude_lambda_packages = getattr(self, 'exclude_lambda_packages')
+        if exclude_lambda_packages is None or \
+                exclude_lambda_packages == '' or \
+                exclude_lambda_packages == 'True' or \
+                exclude_lambda_packages == 'true' or \
+                exclude_lambda_packages == 'Yes' or \
+                exclude_lambda_packages == 'yes':
+            setattr(self, 'exclude_lambda_packages', True)
+        elif exclude_lambda_packages == 'False' or \
+                exclude_lambda_packages == 'false' or \
+                exclude_lambda_packages == 'No' or \
+                exclude_lambda_packages == 'no':
+            setattr(self, 'exclude_lambda_packages', False)
+        else:
+            raise DistutilsOptionError('exclude-lambda-packages must be True, true, Yes, yes, False, false, No, no or absent')
         include_version = getattr(self, 'include_version')
         if include_version is None or \
                 include_version == '' or \
@@ -87,11 +107,13 @@ class LDist(Command):
         # directory, or to using the 'install' command, which
         # will generally only install a zipped egg
         self.run_command('bdist_wheel')
-        setattr(self, '_dist_dir', self.get_finalized_command('bdist_wheel').dist_dir)
+        bdist_wheel_command = self.get_finalized_command('bdist_wheel')
+        setattr(self, '_dist_dir', bdist_wheel_command.dist_dir)
 
         # Install the package built by bdist_wheel
         # (or bdist, or bdist_wheel, depending on how the user called setup.py
-        self._install_dist_package()
+        impl_tag, abi_tag, plat_tag = bdist_wheel_command.get_tag()
+        self._install_dist_package(os.path.join(bdist_wheel_command.dist_dir, f"{bdist_wheel_command.wheel_dist_name}-{impl_tag}-{abi_tag}-{plat_tag}.whl"))
 
         # Use zero (if none specified) or more of the lambda_function, lambda_module or
         # lambda_package attributes to create the lambda entry point function
@@ -102,20 +124,20 @@ class LDist(Command):
         self._build_lambda_package()
 
     def _build_lambda_package(self):
-        dist_name = '{}-{}.zip'.format(self.distribution.get_name(), self.distribution.get_version()) \
+        dist_name = f'{self.distribution.get_name()}-{self.distribution.get_version()}.zip' \
             if getattr(self, 'include_version') \
-            else '{}.zip'.format(self.distribution.get_name())
+            else f'{self.distribution.get_name()}.zip'
         dist_path = os.path.join(self._dist_dir, dist_name)
         if os.path.exists(dist_path):
             os.remove(dist_path)
-        log.info('creating {}'.format(dist_path))
+        log.info(f'creating {dist_path}')
         with zipfile.ZipFile(dist_path, 'w', zipfile.ZIP_DEFLATED) as zf:
             abs_src = os.path.abspath(self._lambda_build_dir)
             for root, _, files in os.walk(self._lambda_build_dir):
                 for filename in files:
                     absname = os.path.abspath(os.path.join(root, filename))
                     arcname = absname[len(abs_src) + 1:]
-                    log.debug('zipping {} as {}'.format(os.path.join(root, filename), arcname))
+                    log.debug(f'zipping {os.path.join(root, filename)} as {arcname}')
                     zf.write(absname, arcname)
         # Set the resulting distribution file path for downstream command use
         setattr(self, 'dist_name', dist_name)
@@ -133,14 +155,14 @@ class LDist(Command):
         module = components[0]
         function = components[1]
         function_lines = [
-            'import {}\n'.format(module),
+            f'import {module}\n',
             '\n',
             '\n',
-            'handler = {}.{}\n'.format(module, function)
+            f'handler = {module}.{function}\n'
         ]
         package_name = self.distribution.get_name().replace('-', '_').replace('.', '_')
-        function_path = os.path.join(self._lambda_build_dir, '{}_function.py'.format(package_name))
-        log.info('creating {}'.format(function_path))
+        function_path = os.path.join(self._lambda_build_dir, f'{package_name}_function.py')
+        log.info(f'creating {function_path}')
         with open(function_path, 'w') as py:
             py.writelines(function_lines)
 
@@ -151,13 +173,13 @@ class LDist(Command):
         for filename in os.listdir(lambda_package):
             filepath = os.path.join(lambda_package, filename)
             if os.path.isdir(filepath):
-                log.debug('{} is a directory, skipping lambda copy'.format(filepath))
+                log.debug(f'{filepath} is a directory, skipping lambda copy')
                 continue
-            log.info('copying {} to {}'.format(filepath, self._lambda_build_dir))
+            log.info(f'copying {filepath} to {self._lambda_build_dir}')
             shutil.copy(filepath, self._lambda_build_dir)
 
 
-    def _install_dist_package(self):
+    def _install_dist_package(self, wheel_path):
         # Get the name of the package that we just built
         package_name = self.distribution.get_name()
         # Get the dist directory that bdist_wheel put the package in
@@ -169,16 +191,27 @@ class LDist(Command):
         try:
             if os.path.exists(self._lambda_build_dir):
                 shutil.rmtree(self._lambda_build_dir)
-            log.info('creating {}'.format(self._lambda_build_dir))
+            log.info(f'creating {self._lambda_build_dir}')
             os.makedirs(build_dir)
         except OSError as exc:
             if exc.errno == errno.EEXIST and os.path.isdir(self._lambda_build_dir):
                 pass
             else:
-                raise DistutilsInternalError('{} already exists and is not a directory'.format(self._lambda_build_dir))
-        log.info('installing package {} from {} into {}'.format(package_name,
-                                                                self._dist_dir,
-                                                                build_dir))
+                raise DistutilsInternalError(f'{self._lambda_build_dir} already exists and is not a directory')
+        log.info(f'installing package {package_name} from {self._dist_dir} into {build_dir}')
+        # Extract our wheel into our build dir
+        with zipfile.ZipFile(wheel_path, "r") as zf:
+            zf.extractall(build_dir)
+
+        # Create the working set to get all recursive dependencies, EXCEPT for the libraries included
+        # with the lambda environment
+        working_set = ExcludesWorkingSet(entries=[build_dir], excludes=LAMBDA_EXCLUDES) if getattr(self, 'exclude_lambda_packages') else WorkingSet(entries=[build_dir])
+        dist_installer = DistInstaller(build_dir)
+        working_set.resolve(
+            parse_requirements(package_name), installer=dist_installer.fetch_dist, replace_conflicting=True
+        )
+        
+        '''
         pip = Popen(['pip', 'install',
                      '-f', self._dist_dir,
                      '-t', build_dir, package_name],
@@ -192,3 +225,4 @@ class LDist(Command):
         else:
             log.debug("pip stdout: {}".format(stdout))
             log.debug("pip stderr: {}".format(stderr))
+        '''

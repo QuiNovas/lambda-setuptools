@@ -31,7 +31,7 @@ setup(
         "Programming Language :: Python :: 2.7",
     ],
     keywords="setuptools extension",
-    install_requires=["boto3", "setuptools", "wheel"],
+    install_requires=["boto3", "setuptools", "wheel", "lambda-pkg-resources"],
     package_dir={"": "src"},
     packages=find_packages("src"),
     setup_requires=[],
