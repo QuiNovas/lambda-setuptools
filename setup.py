@@ -15,7 +15,7 @@ def get_long_description():
 
 setup(
     name="lambda-setuptools",
-    version="0.4.4",
+    version="0.5.0",
     description="A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
