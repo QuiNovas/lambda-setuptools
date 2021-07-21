@@ -15,7 +15,7 @@ def get_long_description():
 
 setup(
     name="lambda-setuptools",
-    version="0.5.0",
+    version="0.6.0",
     description="A Command extension to setuptools that allows building an AWS Lamba dist and uploading to S3",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
@@ -28,10 +28,10 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.8",
     ],
     keywords="setuptools extension",
-    install_requires=["boto3", "setuptools", "wheel", "lambda-pkg-resources"],
+    install_requires=["boto3", "setuptools", "wheel", "lambda-pkg-resources>=0.0.5"],
     package_dir={"": "src"},
     packages=find_packages("src"),
     setup_requires=[],
